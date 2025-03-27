@@ -29,6 +29,10 @@ struct IdentifiableURL: Identifiable {
 struct ContentView: View {
     @State private var streamData: StreamData?
     @State private var selectedVideo: IdentifiableURL?
+    @State private var currentBannerIndex = 0
+    @State private var timer: Timer?
+
+    let bannerAutoScrollInterval: TimeInterval = 5.0 // Intervalo para el deslizamiento automático
 
     var body: some View {
         ZStack {
@@ -46,59 +50,68 @@ struct ContentView: View {
                                    endPoint: .top)
                 )
 
-                // 📌 Carrusel de banners promocionales
-                if let banners = streamData?.banners {
-                    TabView {
-                        ForEach(banners, id: \.self) { banner in
-                            AsyncImage(url: URL(string: banner)) { image in
-                                image.resizable().scaledToFill()
-                            } placeholder: {
-                                Color.gray
+                VStack {
+                    // 📌 Carrusel de banners promocionales
+                    if let banners = streamData?.banners {
+                        TabView(selection: $currentBannerIndex) {
+                            ForEach(banners.indices, id: \.self) { index in
+                                AsyncImage(url: URL(string: banners[index])) { image in
+                                    image.resizable().scaledToFill()
+                                } placeholder: {
+                                    Color.gray
+                                }
+                                .frame(height: 300)
+                                .cornerRadius(15)
+                                .padding(.horizontal)
+                                .tag(index) // Marcamos el índice para permitir la navegación
                             }
-                            .frame(height: 300)
-                            .cornerRadius(15)
-                            .padding(.horizontal)
+                        }
+                        .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
+                        .frame(height: 300)
+                        .onAppear {
+                            startAutoScroll()
+                        }
+                        .onDisappear {
+                            stopAutoScroll()
                         }
                     }
-                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
-                    .frame(height: 300)
-                }
 
-                // 📌 Grid con los videos
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: 20) {
-                        ForEach(data.videos) { video in
-                            Button(action: {
-                                if let encodedURL = video.streamURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-                                   let url = URL(string: encodedURL) {
-                                    selectedVideo = IdentifiableURL(url: url)
-                                }
-                            }) {
-                                ZStack(alignment: .bottomLeading) {
-                                    AsyncImage(url: URL(string: video.thumbnail)) { image in
-                                        image.resizable().scaledToFill()
-                                    } placeholder: {
-                                        Color.gray
+                    // 📌 Grid con los videos
+                    ScrollView {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: 20) {
+                            ForEach(data.videos) { video in
+                                Button(action: {
+                                    if let encodedURL = video.streamURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                                       let url = URL(string: encodedURL) {
+                                        selectedVideo = IdentifiableURL(url: url)
                                     }
-                                    .frame(width: 350, height: 200)
-                                    .cornerRadius(10)
+                                }) {
+                                    ZStack(alignment: .bottomLeading) {
+                                        AsyncImage(url: URL(string: video.thumbnail)) { image in
+                                            image.resizable().scaledToFill()
+                                        } placeholder: {
+                                            Color.gray
+                                        }
+                                        .frame(width: 350, height: 200)
+                                        .cornerRadius(10)
 
-                                    // Fondo oscuro detrás del título
-                                    Rectangle()
-                                        .fill(Color.black.opacity(0.6))
-                                        .frame(height: 50)
-                                        .overlay(
-                                            Text(video.title)
-                                                .foregroundColor(.white)
-                                                .font(.headline)
-                                                .padding(.leading, 10),
-                                            alignment: .leading
-                                        )
+                                        // Fondo oscuro detrás del título
+                                        Rectangle()
+                                            .fill(Color.black.opacity(0.6))
+                                            .frame(height: 50)
+                                            .overlay(
+                                                Text(video.title)
+                                                    .foregroundColor(.white)
+                                                    .font(.headline)
+                                                    .padding(.leading, 10),
+                                                alignment: .leading
+                                            )
+                                    }
                                 }
                             }
                         }
+                        .padding()
                     }
-                    .padding()
                 }
             } else {
                 ProgressView("Cargando contenido...")
@@ -126,5 +139,20 @@ struct ContentView: View {
                 }
             }
         }.resume()
+    }
+
+    // 📌 Iniciar el deslizamiento automático de banners
+    func startAutoScroll() {
+        timer = Timer.scheduledTimer(withTimeInterval: bannerAutoScrollInterval, repeats: true) { _ in
+            if let banners = streamData?.banners, !banners.isEmpty {
+                currentBannerIndex = (currentBannerIndex + 1) % banners.count
+            }
+        }
+    }
+
+    // 📌 Detener el deslizamiento automático de banners
+    func stopAutoScroll() {
+        timer?.invalidate()
+        timer = nil
     }
 }
