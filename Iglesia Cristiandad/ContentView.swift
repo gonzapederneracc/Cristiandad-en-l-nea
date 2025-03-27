@@ -60,15 +60,16 @@ struct ContentView: View {
                                 } placeholder: {
                                     Color.gray
                                 }
-                                .frame(height: 300)
+                                .frame(height: 600)
                                 .cornerRadius(15)
+                                .padding(.top, 60)
                                 .padding(.horizontal)
                                 .tag(index) // Marcamos el índice para permitir la navegación
                                 .transition(.slide) // Agregar animación de deslizamiento
                             }
                         }
                         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
-                        .frame(height: 300)
+                        .frame(height: 600)
                         .onAppear {
                             startAutoScroll()
                         }
@@ -87,26 +88,21 @@ struct ContentView: View {
                                         selectedVideo = IdentifiableURL(url: url)
                                     }
                                 }) {
-                                    ZStack(alignment: .bottomLeading) {
+                                    VStack {
                                         AsyncImage(url: URL(string: video.thumbnail)) { image in
                                             image.resizable().scaledToFill()
                                         } placeholder: {
-                                            Color.gray
+                                            Color.gray.opacity(0)
                                         }
                                         .frame(width: 350, height: 200)
                                         .cornerRadius(20)
 
-                                        // Fondo oscuro detrás del título
-                                        Rectangle()
-                                            .fill(Color.black.opacity(0.6))
-                                            .frame(height: 50)
-                                            .overlay(
-                                                Text(video.title)
-                                                    .foregroundColor(.white)
-                                                    .font(.headline)
-                                                    .padding(.leading, 10),
-                                                alignment: .leading
-                                            )
+                                        // El título debajo del thumbnail
+                                        Text(video.title)
+                                            .foregroundColor(.white)
+                                            .font(.subheadline)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.top, 3) // Espaciado entre la imagen y el texto
                                     }
                                 }
                             }
