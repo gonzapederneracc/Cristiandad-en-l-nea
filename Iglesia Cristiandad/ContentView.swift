@@ -64,6 +64,7 @@ struct ContentView: View {
                                 .cornerRadius(15)
                                 .padding(.horizontal)
                                 .tag(index) // Marcamos el índice para permitir la navegación
+                                .transition(.slide) // Agregar animación de deslizamiento
                             }
                         }
                         .tabViewStyle(PageTabViewStyle(indexDisplayMode: .automatic))
@@ -78,7 +79,7 @@ struct ContentView: View {
 
                     // 📌 Grid con los videos
                     ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: 20) {
+                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 300))], spacing: 50) {
                             ForEach(data.videos) { video in
                                 Button(action: {
                                     if let encodedURL = video.streamURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
@@ -93,7 +94,7 @@ struct ContentView: View {
                                             Color.gray
                                         }
                                         .frame(width: 350, height: 200)
-                                        .cornerRadius(10)
+                                        .cornerRadius(20)
 
                                         // Fondo oscuro detrás del título
                                         Rectangle()
